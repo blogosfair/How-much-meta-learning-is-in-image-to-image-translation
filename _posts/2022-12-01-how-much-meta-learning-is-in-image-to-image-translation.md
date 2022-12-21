@@ -40,13 +40,15 @@ toc:
 ---
 
 
-At the last ICLR conference Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> tested how well CNN architectures transfer the invariance to nuisance transformations between classes of a classification task. 
+At the last ICLR conference Zhou et al. published the paper 
 
-- Allan Zhou, Fahim Tajwar, Alexander Robey, Tom Knowles, George J. Pappas, Hamed Hassani, Chelsea Finn [ICLR, 2022] Do Deep Networks Transfer Invariances Across Classes?<d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> 
+- Allan Zhou, Fahim Tajwar, Alexander Robey, Tom Knowles, George J. Pappas, Hamed Hassani, Chelsea Finn [ICLR, 2022] Do Deep Networks Transfer Invariances Across Classes?<d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite>.
+
+and tested how well CNN architectures transfer the invariance to nuisance transformations between classes of a classification task. 
 
 In other words, does a CNN transfer the information that "apples are apples no matter how you rotate them" to images of plums and pears?
 
-The result: not very well. But Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> found they could use an image-to-image translation method DBLP:conf/eccv/HuangLBK18 to learn invariance indirectly. The viability of this method suggests an interesting connection between meta-learning and image-to-image translation.
+The result: not very well. But they found they could use an image-to-image translation method  <d-cite key="DBLP:conf/eccv/HuangLBK18"></d-cite> to learn invariance indirectly. The viability of this method suggests an interesting connection between meta-learning and image-to-image translation.
 
 In this blog post, we will:
 
@@ -158,6 +160,7 @@ Both meta-learning and multi-domain unsupervised image-to-image translation are 
 
 Francheschi et al. [2018] <d-cite key="DBLP:conf/icml/FranceschiFSGP18"></d-cite> show that all contemporary neural-network-based meta-learning approaches can be expressed as bi-level optimization problems. We can formally write the optimization objective of a general meta-learner as:
 
+
 <div class="blue_highlight_mx-e">
 $$
 \begin{equation}
@@ -165,6 +168,7 @@ $$
    \end{equation}
 $$
 </div>
+
 
 where M describes the number of tasks in a batch, $\mathcal{L}^{meta}$ is the meta-loss function, and $ D^{val}_i $ is the meta-validation set of the task $ i $. $\omega$ represents the parameters exclusively updated in the outer loop. $ \theta^{* \; (i)} $ represents an inner loop learning a task that we can formally express as a sub-objective constraining the primary objective
 
@@ -186,7 +190,6 @@ MUNIT's loss function consists of two adversarial (GAN) <d-cite key="DBLP:conf/n
 MUNIT's GAN loss term is
 
 $$
-\begin{equation}
 \mathcal{L}^{x_{2}}_{GAN}(\theta_d, \theta_c, \theta_s) = \mathbb{E}_{c_{1} \sim p(c_{1}), s_{2} \sim p(s_{2})} \left[ \log (1 -D_ {2} (G_{2} (c_{1}, s_{2}, \theta_c, \theta_s), \theta_d)) \right] + \mathbb{E}_{x_{2} \sim p(x_{2})}  \left[ \log(D_{2} (x_{2}, \theta_d)) \right],
 $$
 
@@ -202,10 +205,9 @@ $$
 We can reformulate this into a bi-level optimization problem by extracting a minimization problem describing the update of the generative networks.
 We also drop the second GAN loss term as it is not relevant to our analysis. 
 <div class="blue_highlight_mx-e">
-
 $$
     \omega^{*} = \{ \theta_c^*, \theta_s^* \} = \underset{\theta_c, \theta_s}{\mathrm{argmin}} \; \mathbb{E}_{c_{1} \sim p(c_{1}), s_{2} \sim p(s_{2})} \left[ \log (1 -D_ {2} (G_{2} (c_{1}, s_{2}, \theta_c, \theta_s), \theta_d^{*})) \right]
-    $$
+$$
 </div>
 
 $$
