@@ -31,12 +31,7 @@ bibliography: 2022-12-01-distill-example.bib
 #   - make sure that TOC names match the actual section names
 #     for hyperlinks within the post to work correctly.
 toc:
-  - name: [Section 1]
-  - name: [Section 2]
-  # you can additionally add subentries like so
-    subsections:
-    - name: [Subsection 2.1]
-  - name: [Section 3]
+  - name: The problem of classification with class-imbalances
 ---
 
 
@@ -56,7 +51,7 @@ In this blog post I will:
 
 Let's go!
 
-## 1 The problem of classification with class-imbalances
+## The problem of classification with class-imbalances
 First, we need to get acquainted with class-imbalanced classification. We can formalize general classification problems as estimating a distribution
 
 $$\begin{equation}
