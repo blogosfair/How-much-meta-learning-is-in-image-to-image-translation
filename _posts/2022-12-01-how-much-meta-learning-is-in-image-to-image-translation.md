@@ -25,7 +25,7 @@ authors:
 #       name: IAS, Princeton 
 
 # must be the exact same name as your blogpost
-bibliography: 2022-12-01-distill-example.bib  
+bibliography: 2022-12-01-how-much-meta-learning-is-in-image-to-image-translation.bib  
 
 # Add a table of contents to your post.
 #   - make sure that TOC names match the actual section names
@@ -79,7 +79,8 @@ $$
     T(\cdot |x)
 $$
 
-<img src="{{ site.url }}/public/images/2020-09-01-how-much-meta-learning/TRANSFORM_DIST.svg" alt="an example of a transformation distribution" style="height:450px;display: block;margin-left: auto;margin-right: auto;"/>
+{% include figure.html path="assets/img/2022-12-01-how-much-meta-learning-is-in-image-to-image-translation/TRANSFORM_DIST.svg" class="img-fluid" %}
+
 
 A nuisance transformation might be a distribution over rotation matrices of different angles or lighting transformations of different exposure values. At any rate, nuisance transformations have, by definition, no impact on class labels $ y $, only on data $ x $. A perfectly transformation-invariant classifier would completely ignore them, i.e.,
 
@@ -96,7 +97,8 @@ $$
 The KL divergence is zero if the two distributions are identical and greater than zero otherwise. *The higher the expected KL-divergence, the more 
  the applied transformation impacts the network's predictions.*
 
-<img alt="expected KL-divergence by class-size" src="{{ site.url }}/public/images/2020-09-01-how-much-meta-learning/EKLD.svg" style="height:450px;display: block;margin-left: auto;margin-right: auto;"/>
+{% include figure.html path="assets/img/2022-12-01-how-much-meta-learning-is-in-image-to-image-translation/EKLD.svg" class="img-fluid" %}
+
 
 Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> run several classification experiments using common CNN architectures and class-imbalanced datasets. They find that class size strongly predicts invariance: Nuisance transformations impact the classification results more strongly on classes with few examples (see figure above). They conclude that CNNs cannot transfer invariance to nuisance transformations between classes.
 
@@ -106,13 +108,14 @@ To transfer invariance to nuisance transformations to classes with few examples,
 
 MUNIT networks perform image-to-image translation, meaning they translate an image from one domain, say, pictures of leopards, into another domain, say, pictures of house cats. The resulting translated image should simultaneously look like the image of a real house cat and resemble the original leopard image. For example, if the depicted leopard closes its eyes, the translated image should contain a house cat with closed eyes: Since eye-state is a feature of both domains a good translator will not alter it. On the other hand, a leopard's fur is yellow and spotted, while a house cat can be white, black, grey, or brown. Therefore, to make the translated images indiscernible from real house cats, the translator has to produce house cats in all these colors.
 
-<img alt="an overview of how MUNITs auto-encoding process" src="{{ site.url }}/public/images/2020-09-01-how-much-meta-learning/MUNIT_ENCODING.svg" style="height:450px;display: block;margin-left: auto;margin-right: auto;"/>
+{% include figure.html path="assets/img/2022-12-01-how-much-meta-learning-is-in-image-to-image-translation/MUNIT_ENCODING.svg" class="img-fluid" %}
+
 
 MUNIT networks learn to perform translations by correctly distinguishing the *domain-agnostic* features (eye-state) and the *domain-specific* features (distribution of fur color). They embed an image into two latent spaces: A content space encoding the domain-agnostic and a style space encoding the domain-specific features (see figure above).
 
 To transform a leopard into a house cat, we encode the leopard into a content and a style code, throw away the leopard-specific style code, randomly select a cat-specific style code and assemble a similar-looking house cat photo by combining the leopard's content code with the randomly drawn cat style code (see figure below). 
 
-<img alt="an overview of how MUNITs translation process" src="{{ site.url }}/public/images/2020-09-01-how-much-meta-learning/MUNIT_TRANSLATION.svg" style="height:450px;display: block;margin-left: auto;margin-right: auto;"/>
+{% include figure.html path="assets/img/2022-12-01-how-much-meta-learning-is-in-image-to-image-translation/MUNIT_TRANSLATION.svg" class="img-fluid" %}
 
 Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite>  modify this process. They do not use MUNIT to transfer images between domains but within a *single domain*. The MUNIT network exchanges the style code of the image with another style code *of the same domain*.  In the example of house cats, this might mean translating a grey house cat into a black one. The difficulty in this single-domain application of MUNIT is to decompose *domain-agnostic content features* from *domain-specific style features* so that the translated images still look like they are from the same domain: In the house cat domain, fur color is a valid style feature, since every house cat has a fur color. However, if the domain contained house cats *and apples*, fur color is not a valid style feature, since we then might generate an apple with black fur. This example illustrates that all valid style features must be exchangeable between *any two images* of the domain.
 
@@ -127,13 +130,13 @@ The knowledge of $ T(\cdot &#124;x) $ extracted by the MUNIT is information that
 
 It is instructive to look at one of the earliest and most prominent definitions of meta-learning to see how meta-learning relates to all discussed previously. In the 1998 book "Learning to learn" Sebastian Thrun & Lorien Pratt define an algorithm as capable of "Learning to learn" if it improves its performance in proportion to the number of tasks it is exposed to:
 
->an algorithm is said to learn to learn if its performance at each task improves with experience and with the number of tasks. Put differently, a learning algorithm whose performance does not depend on the number of learning tasks, which hence would not benefit from the presence of other learning tasks, is not said to learn to learn. [[Thrun and Pratt]](https://link.springer.com/chapter/10.1007/978-1-4615-5529-2_1).
+>an algorithm is said to learn to learn if its performance at each task improves with experience and with the number of tasks. Put differently, a learning algorithm whose performance does not depend on the number of learning tasks, which hence would not benefit from the presence of other learning tasks, is not said to learn to learn <d-cite key="DBLP:books/sp/98/ThrunP98"></d-cite>
 
 At first glance, this does not have much to do with our problem as we are transferring invariance between classes of a *single task*. However, it is not necessarily clear that we are performing a single task: Instead of viewing the problem as one multi-classification task, we can also view it as a series of binary classification tasks of the type $ P(y=j_i&#124;x) \forall i \in J $, where J is a set of classes, which the CNN executes jointly. If we use the second interpretation, a meta-learning algorithm should be able to transfer information, for instance, invariance to nuisance transformations, between classes and get better with each class we add to the dataset. Thrun and Pratt continue:
 
->For an algorithm to fit this definition some kind of *transfer* must occur between multiple tasks that must have a positive impact on expected task-performance [[Thrun and Pratt]](https://link.springer.com/chapter/10.1007/978-1-4615-5529-2_1).
+>For an algorithm to fit this definition some kind of *transfer* must occur between multiple tasks that must have a positive impact on expected task-performance <d-cite key="DBLP:books/sp/98/ThrunP98"></d-cite>.
 
-We can see from [Zhou et al.'s [2022]](https://arxiv.org/abs/2203.09739) results that CNNs do not fulfill this criterium. They do not, or not fully, transfer the invariance to nuisance transformations between classes. State-of-the-art meta-learning algorithms do fulfill it at least for some types of transformations. Surprisingly, so do the very differently functioning MUNIT networks. So are MUNIT networks meta-learners? We are finally ready to discuss this question:
+We can see from results of Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> that CNNs do not fulfill this criterium. They do not, or not fully, transfer the invariance to nuisance transformations between classes. State-of-the-art meta-learning algorithms do fulfill it at least for some types of transformations. Surprisingly, so do the very differently functioning MUNIT networks. So are MUNIT networks meta-learners? We are finally ready to discuss this question:
 
 ## How much meta-learning is in image-to-image translation?
 
@@ -143,9 +146,9 @@ $$
 \underset{\omega}{\mathrm{min}} \; \mathbb{E}_{\mathcal{T} \sim p(\mathcal{T})} \; \mathcal{L}(\mathcal{D}, \omega), 
 $$
 
-where $ \omega $ is parameters trained exclusively on the meta-level, i.e., the *meta-knowledge* learnable from the task distribution [[Hospedales et al., 2020]](https://arxiv.org/pdf/2004.05439.pdf).
+where $ \omega $ is parameters trained exclusively on the meta-level, i.e., the *meta-knowledge* learnable from the task distribution <d-cite key="DBLP:journals/pami/HospedalesAMS22"></d-cite>.
 
-This *meta-knowledge* is what the meta-learner accumulates and transfers across the tasks in Thrun and Pratt's definition above. Collecting meta-knowledge allows the meta-learner to improve its expected task-performance with the number of tasks. The meta-knowledge in [Zhou et al.'s [2022]](https://arxiv.org/abs/2203.09739) class-imbalanced classification problem is the invariance to the nuisance transformations as the transformations are identical and need to be ignored in all classes. By creating additional transformed samples, the MUNIT network makes the meta-knowledge learnable for the CNN. Contemporary meta-learners, such as the MAML-framework [[Finn et al., 2017]](http://proceedings.mlr.press/v70/finn17a/finn17a.pdf), would, however, also be able to extract and use this meta-knowledge. In this respect, both approaches function similarly.
+This *meta-knowledge* is what the meta-learner accumulates and transfers across the tasks in Thrun and Pratt's definition above. Collecting meta-knowledge allows the meta-learner to improve its expected task-performance with the number of tasks. The meta-knowledge in the class-imbalanced classification problem of of Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> is the invariance to the nuisance transformations as the transformations are identical and need to be ignored in all classes. By creating additional transformed samples, the MUNIT network makes the meta-knowledge learnable for the CNN. Contemporary meta-learners, such as the MAML-framework <d-cite key="DBLP:conf/icml/FinnAL17"></d-cite>, would, however, also be able to extract and use this meta-knowledge. In this respect, both approaches function similarly.
 
 The task-centered view of meta-learning brings us to a related issue: A meta-learner must discern and decompose task-specific knowledge from meta-knowledge. Contemporary meta-learners decompose meta-knowledge through the different objectives of their inner and outer loops and their respective loss terms. They store meta-knowledge in the outer loop's parameter set $ \omega $ but must not learn task-specific information there. Any unlearned meta-features lead to slower adaptation, negatively impacting performance, *meta-underfitting*. On the other hand, any learned task-specific features will not generalize to unseen tasks in the distribution, thus also negatively impacting performance, *meta-overfitting*.
 
@@ -153,7 +156,7 @@ We recall that, similarly, MUNIT DBLP:conf/eccv/HuangLBK18 decomposes domain-spe
 
 Both meta-learning and multi-domain unsupervised image-to-image translation are thus learning problems that require a separation of the general from the specific. This is even visible when comparing their formalizations as optimization problems.
 
-[Francheschi et al. [2018]](https://proceedings.mlr.press/v80/franceschi18a/franceschi18a.pdf) show that all contemporary neural-network-based meta-learning approaches can be expressed as bi-level optimization problems. We can formally write the optimization objective of a general meta-learner as:
+Francheschi et al. [2018] <d-cite key="DBLP:conf/icml/FranceschiFSGP18"></d-cite> show that all contemporary neural-network-based meta-learning approaches can be expressed as bi-level optimization problems. We can formally write the optimization objective of a general meta-learner as:
 
 <div class="blue_highlight_mx-e">
 $$
@@ -171,13 +174,14 @@ $$
 $$
 </div>
 
-where $ \theta $ are the model parameters updated in the inner loop, $ \mathcal{L}^{task} $ is the loss function by which they are updated and $ D^{tr}_i $ is the training set of the task $ i $ [[Hospedales et al., 2020]](https://arxiv.org/pdf/2004.05439.pdf).
+where $ \theta $ are the model parameters updated in the inner loop, $ \mathcal{L}^{task} $ is the loss function by which they are updated and $ D^{tr}_i $ is the training set of the task $ i $  <d-cite key="DBLP:journals/pami/HospedalesAMS22"></d-cite>.
 
 It turns out that the loss functions of MUNIT can be similarly decomposed:
 
-<img alt="a visualization of MUNIT's GAN loss" src="{{ site.url }}/public/images/2020-09-01-how-much-meta-learning/MUNIT_LOSS.svg" style="height:450px;display: block;margin-left: auto;margin-right: auto;"/>
+{% include figure.html path="assets/img/2022-12-01-how-much-meta-learning-is-in-image-to-image-translation/MUNIT_LOSS.svg" class="img-fluid" %}
 
-MUNIT's loss function consists of two adversarial (GAN) [[Goodfellow et al., 2014]](https://proceedings.neurips.cc/paper/2014/file/5ca3e9b122f61f8f06494c97b1afccf3-Paper.pdf) loss terms (see figure above) with several auxiliary reconstruction loss terms. To keep the notation simple, we combine all reconstruction terms into a joined reconstruction loss $ \mathcal{L}_{recon}(\theta_c, \theta_s) $, where $ \theta_c $ are the parameters of the *content* encoding/decoding networks and $ \theta_s $ are the parameters of the *style* encoding/decoding networks. We will only look at one of the two GAN losses in detail since they are symmetric and one is discarded entirely when MUNIT is used on a single domain in the fashion of Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite>.
+
+MUNIT's loss function consists of two adversarial (GAN) <d-cite key="DBLP:conf/nips/GoodfellowPMXWOCB14"></d-cite> loss terms (see figure above) with several auxiliary reconstruction loss terms. To keep the notation simple, we combine all reconstruction terms into a joined reconstruction loss $ \mathcal{L}_{recon}(\theta_c, \theta_s) $, where $ \theta_c $ are the parameters of the *content* encoding/decoding networks and $ \theta_s $ are the parameters of the *style* encoding/decoding networks. We will only look at one of the two GAN losses in detail since they are symmetric and one is discarded entirely when MUNIT is used on a single domain in the fashion of Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite>.
 
 MUNIT's GAN loss term is
 
@@ -194,7 +198,7 @@ $$
     \\+  \mathcal{L}_{recon}(\theta_c, \theta_s)
 $$
 
-(compare DBLP:conf/eccv/HuangLBK18, [[Goodfellow et al., 2014]](https://proceedings.neurips.cc/paper/2014/file/5ca3e9b122f61f8f06494c97b1afccf3-Paper.pdf)).
+(compare <d-cite key="DBLP:conf/eccv/HuangLBK18, DBLP:conf/nips/GoodfellowPMXWOCB14"></d-cite>).
 We can reformulate this into a bi-level optimization problem by extracting a minimization problem describing the update of the generative networks.
 We also drop the second GAN loss term as it is not relevant to our analysis. 
 <div class="blue_highlight_mx-e">
@@ -233,7 +237,7 @@ Understanding that meta-learning shares commonalities with the seemingly unrelat
 
 ## Conclusion
 
-The ICLR paper ["Do Deep Networks Transfer Invariances Across Classes?"](https://arxiv.org/abs/2203.09739) shows that image-to-image translation methods can be used to learn and apply nuisance transformations, enabling a CNN to become invariant to them via data augmentation. This blog post argues that this is a meta-learning setting. In the view of this author, Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> solve a meta-learning problem using a generative method. A closer examination reveals parallels between both types of architecture. 
+The ICLR paper "Do Deep Networks Transfer Invariances Across Classes?" <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> shows that image-to-image translation methods can be used to learn and apply nuisance transformations, enabling a CNN to become invariant to them via data augmentation. This blog post argues that this is a meta-learning setting. In the view of this author, Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> solve a meta-learning problem using a generative method. A closer examination reveals parallels between both types of architecture. 
 Further research on the boundary of these related fields and the transfer of ideas between them appears promising. 
 
 *In summary, learning the meta-information of image-to-image translation and meta-learning might train researchers to adapt to new tasks successfully.*
