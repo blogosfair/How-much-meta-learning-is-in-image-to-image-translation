@@ -32,58 +32,66 @@ bibliography: 2022-12-01-distill-example.bib
 #     for hyperlinks within the post to work correctly.
 toc:
   - name: The problem of classification with class-imbalances
+  - name: Measuring invariance transfer
+  - name: Generative Invariance Transfer
+  - name: What does this have to do with meta-learning? 
+  - name: How much meta-learning is in image-to-image translation?
+  - name: Conclusion
 ---
 
 
-At the last ICLR conference Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> tested how well CNN architectures transfer the invariance to nuisance transformations between classes of a  classification task. 
-- Allan Zhou, Fahim Tajwar, Alexander Robey, Tom Knowles, George J. Pappas, Hamed Hassani, Chelsea Finn [ICLR, 2022] [Do Deep Networks Transfer Invariances Across Classes?]<d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> 
+At the last ICLR conference Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> tested how well CNN architectures transfer the invariance to nuisance transformations between classes of a classification task. 
+
+- Allan Zhou, Fahim Tajwar, Alexander Robey, Tom Knowles, George J. Pappas, Hamed Hassani, Chelsea Finn [ICLR, 2022] Do Deep Networks Transfer Invariances Across Classes?<d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> 
 
 In other words, does a CNN transfer the information that "apples are apples no matter how you rotate them" to images of plums and pears?
 
 The result: not very well. But Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> found they could use an image-to-image translation method DBLP:conf/eccv/HuangLBK18 to learn invariance indirectly. The viability of this method suggests an interesting connection between meta-learning and image-to-image translation.
 
-In this blog post I will:
-1. define classification in a class-imbalanced setting.
-2. explain how Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> measured invariance transfer.
-3. give an overview of generative invariance transfer.
-4. clarify the connection to meta-learning.
-5. discuss the similarities between image-to-image translation and contemporary meta-learning methods.
+In this blog post, we will:
+
+- define classification in a class-imbalanced setting.
+- explain how Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> measured invariance transfer.
+- give an overview of generative invariance transfer.
+- clarify the connection to meta-learning.
+- discuss the similarities between image-to-image translation and contemporary meta-learning methods.
 
 Let's go!
 
 ## The problem of classification with class-imbalances
+
 First, we need to get acquainted with class-imbalanced classification. We can formalize general classification problems as estimating a distribution
 
-$$\begin{equation}
+$$
     \hat{P}_w(y = j|x),
-\end{equation}$$
+$$
 
 where $ j $ is a class label, $ x $ is a training sample, for instance, an image, and $ y $ is our model's prediction of the image's class. During the training process, we select the model weights $ w $ to minimize the difference between the model and the actual distribution for each example in our training set. Academic datasets often have an equal number of examples for each class. In the real world, this is not always the case. Class-imbalanced classification is classification on class-imbalanced data, meaning the frequencies of class labels $ j $ differ significantly. 
 
 Of course, it is harder for a neural net to learn to correctly recognize the classes with few examples than the classes with many. Still, we might want to perform well on all classes, regardless of size. If we have, for instance, a dataset classifying different types of skin tumors, the overwhelming majority of examples will be benign. However, we should be *especially* good at spotting the rare, malignant ones. Tools designed for regular classification tasks can mislead here: If 99.9% of skin samples were benign and we used the regular accuracy metric, a classifier simply returning "benign" for *any* input would achieve a seemingly great accuracy of 99.9%. There are several more expressive performance measures in such a setting. Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> use a balanced test set, i.e., with equal frequencies of all labels $ j $. 
 
-## 2 Measuring invariance transfer
+## Measuring invariance transfer
 Transformations are alterations to the data. Nuisance transformations in an image classification setting are alterations that do not affect the class labels of data. A model is invariant to a nuisance transformation if it can successfully ignore the transformation when predicting a label.
 
 We can formally define a nuisance transformation as a distribution over transformation functions:
 
-$$\begin{equation}
+$$
     T(\cdot |x)
-\end{equation}$$
+$$
 
 <img src="{{ site.url }}/public/images/2020-09-01-how-much-meta-learning/TRANSFORM_DIST.svg" alt="an example of a transformation distribution" style="height:450px;display: block;margin-left: auto;margin-right: auto;"/>
 
 A nuisance transformation might be a distribution over rotation matrices of different angles or lighting transformations of different exposure values. At any rate, nuisance transformations have, by definition, no impact on class labels $ y $, only on data $ x $. A perfectly transformation-invariant classifier would completely ignore them, i.e.,
 
-$$\begin{equation}
+$$
     \hat{P}_w(y = j|x) = \hat{P}_w(y = j|x'), \; x' \sim T(\cdot |x)
-\end{equation}$$
+$$
 
 Because this equality will not hold for all classifiers, we need a way to *quantify* how much worse they perform given transformed data. The most straightforward solution is to compare the two distributions using the [Kullback-Leibler divergence](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence). Since measuring the true KL divergence would require an infinite amount of test samples, we calculate its empirical expectation:
 
-$$\begin{equation}
+$$
     eKLD(\hat{P}_w) = \mathbb{E}_{x \sim \mathbb{P}_{train}, x' \sim T(\cdot|x)} [D_{KL}(\hat{P}_w(y = j|x) || \hat{P}_w(y = j|x'))]
-\end{equation}$$
+$$
 
 The KL divergence is zero if the two distributions are identical and greater than zero otherwise. *The higher the expected KL-divergence, the more 
  the applied transformation impacts the network's predictions.*
@@ -92,7 +100,7 @@ The KL divergence is zero if the two distributions are identical and greater tha
 
 Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> run several classification experiments using common CNN architectures and class-imbalanced datasets. They find that class size strongly predicts invariance: Nuisance transformations impact the classification results more strongly on classes with few examples (see figure above). They conclude that CNNs cannot transfer invariance to nuisance transformations between classes.
 
-## 3 Generative Invariance Transfer
+## Generative Invariance Transfer
 
 To transfer invariance to nuisance transformations to classes with few examples, Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> use an interesting method: They train a Multimodal Unsupervised image-to-image Translation (MUNIT) network DBLP:conf/eccv/HuangLBK18 on the class-imbalanced dataset.
 
@@ -115,7 +123,7 @@ Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> found tha
 The knowledge of $ T(\cdot &#124;x) $ extracted by the MUNIT is information that applies to the entire dataset, irrespective of class label - a meta-fact about the dataset. This brings us to meta-learning.
 
 
-## 4 What does this have to do with meta-learning? 
+## What does this have to do with meta-learning? 
 
 It is instructive to look at one of the earliest and most prominent definitions of meta-learning to see how meta-learning relates to all discussed previously. In the 1998 book "Learning to learn" Sebastian Thrun & Lorien Pratt define an algorithm as capable of "Learning to learn" if it improves its performance in proportion to the number of tasks it is exposed to:
 
@@ -127,13 +135,13 @@ At first glance, this does not have much to do with our problem as we are transf
 
 We can see from [Zhou et al.'s [2022]](https://arxiv.org/abs/2203.09739) results that CNNs do not fulfill this criterium. They do not, or not fully, transfer the invariance to nuisance transformations between classes. State-of-the-art meta-learning algorithms do fulfill it at least for some types of transformations. Surprisingly, so do the very differently functioning MUNIT networks. So are MUNIT networks meta-learners? We are finally ready to discuss this question:
 
-## 5 How much meta-learning is in image-to-image translation?
+## How much meta-learning is in image-to-image translation?
 
 To see how well MUNIT fits the definition of meta-learning, let's define meta-learning more concretely. Contemporary neural-network-based meta-learners are defined in terms of a learning procedure: An outer training loop with a set of trainable parameters iterates over tasks in a  distribution of tasks. Formally a task is comprised of a dataset and a loss function $ \mathcal{T} = \\\{ \mathcal{D}, \mathcal{L} \\\} $. In an inner loop, a learning algorithm is instantiated for each such task based on the outer loop's parameters. It is trained on a training set (*meta-training*) and tested on a validation set (*meta-validation*). The loss on this validation set is then used to update the outer loop's parameters. In this task-centered view of meta-learning, we can express the objective function as
 
-$$\begin{equation}
+$$
 \underset{\omega}{\mathrm{min}} \; \mathbb{E}_{\mathcal{T} \sim p(\mathcal{T})} \; \mathcal{L}(\mathcal{D}, \omega), 
-\end{equation}$$
+$$
 
 where $ \omega $ is parameters trained exclusively on the meta-level, i.e., the *meta-knowledge* learnable from the task distribution [[Hospedales et al., 2020]](https://arxiv.org/pdf/2004.05439.pdf).
 
@@ -158,9 +166,9 @@ $$
 where M describes the number of tasks in a batch, $\mathcal{L}^{meta}$ is the meta-loss function, and $ D^{val}_i $ is the meta-validation set of the task $ i $. $\omega$ represents the parameters exclusively updated in the outer loop. $ \theta^{* \; (i)} $ represents an inner loop learning a task that we can formally express as a sub-objective constraining the primary objective
 
 <div class="yellow_highlight_mx-e">
-$$\begin{equation}
+$$
    s.t. \; \theta^{* \; (i)} = \underset{\theta}{\mathrm{argmin}} \; \mathcal{L^{task}}(\theta, \omega, D^{tr}_i),
-\end{equation}$$
+$$
 </div>
 
 where $ \theta $ are the model parameters updated in the inner loop, $ \mathcal{L}^{task} $ is the loss function by which they are updated and $ D^{tr}_i $ is the training set of the task $ i $ [[Hospedales et al., 2020]](https://arxiv.org/pdf/2004.05439.pdf).
@@ -176,37 +184,37 @@ MUNIT's GAN loss term is
 $$
 \begin{equation}
 \mathcal{L}^{x_{2}}_{GAN}(\theta_d, \theta_c, \theta_s) = \mathbb{E}_{c_{1} \sim p(c_{1}), s_{2} \sim p(s_{2})} \left[ \log (1 -D_ {2} (G_{2} (c_{1}, s_{2}, \theta_c, \theta_s), \theta_d)) \right] + \mathbb{E}_{x_{2} \sim p(x_{2})}  \left[ \log(D_{2} (x_{2}, \theta_d)) \right],
-\end{equation}$$
+$$
 
 where the $ \theta_d $ represents the parameters of the discriminator network, $p(x_2)$ is the data of the second domain, $ c_1 $ is the content embedding of an image from the first domain to be translated. $ s_2 $ is a random style code of the second domain. $ D_2 $ is the discriminator of the second domain, and $ G_2 $ is its generator. MUNIT's full objective function is:
 
-$$\begin{equation}
+$$
         \underset{\theta_c, \theta_s}{\mathrm{argmin}} \; \underset{\theta_d}{\mathrm{argmax}} \;\mathbb{E}_{c_{1} \sim p(c_{1}), s_{2} \sim p(s_{2})} \left[ \log (1 -D_ {2} (G_{2} (c_{1}, s_{2}, \theta_c, \theta_s), \theta_d)) \right]
     \\ + \mathbb{E}_{x_{2} \sim p(x_{2})}  \left[ \log(D_{2} (x_{2}, \theta_d)) \right], + \; \mathcal{L}^{x_{1}}_{GAN}(\theta_d, \theta_c, \theta_s) 
     \\+  \mathcal{L}_{recon}(\theta_c, \theta_s)
-\end{equation}$$
+$$
 
 (compare DBLP:conf/eccv/HuangLBK18, [[Goodfellow et al., 2014]](https://proceedings.neurips.cc/paper/2014/file/5ca3e9b122f61f8f06494c97b1afccf3-Paper.pdf)).
 We can reformulate this into a bi-level optimization problem by extracting a minimization problem describing the update of the generative networks.
 We also drop the second GAN loss term as it is not relevant to our analysis. 
 <div class="blue_highlight_mx-e">
 
-$$\begin{equation}
+$$
     \omega^{*} = \{ \theta_c^*, \theta_s^* \} = \underset{\theta_c, \theta_s}{\mathrm{argmin}} \; \mathbb{E}_{c_{1} \sim p(c_{1}), s_{2} \sim p(s_{2})} \left[ \log (1 -D_ {2} (G_{2} (c_{1}, s_{2}, \theta_c, \theta_s), \theta_d^{*})) \right]
-    \end{equation}$$
+    $$
 </div>
 
-$$\begin{equation}
+$$
     \\+  \mathcal{L}_{recon}(\theta_c, \theta_s),
-\end{equation}$$
+$$
 
 We then add a single constraint, a subsidiary maximization problem for the discriminator function:
 
 <div class="yellow_highlight_mx-e">
-$$\begin{equation}
+$$
    s.t. \; \theta_d^{*} = \underset{\theta_d}{\mathrm{argmax}} \; \mathbb{E}_{c_{1} \sim p(c_{1}), s_{2} \sim p(s_{2})} \left[ \log (1 -D_ {2} (G_{2} (c_{1}, s_{2}, \theta_c, \theta_s), \theta_d)) \right] 
     + \mathbb{E}_{x_{2} \sim p(x_{2})}  \left[ \log(D_{2} (x_{2}, \theta_d)) \right]
-    \end{equation}$$
+    $$
 </div>
 
 
