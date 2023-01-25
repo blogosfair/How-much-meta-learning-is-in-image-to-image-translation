@@ -175,9 +175,11 @@ Francheschi et al. [2018] <d-cite key="DBLP:conf/icml/FranceschiFSGP18"></d-cite
 
 <p>
 $$
+\bbox[5pt, border: 2px solid blue]{
 \begin{align*}
-   \omega^{*} = \bbox[5pt, border: 2px solid blue]{\underset{\omega}{\mathrm{argmin}} \sum_{i=1}^{M} \mathcal{L}^{meta}(\theta^{* \; (i)}(\omega), D^{val}_i)},
+   \omega^{*} = \underset{\omega}{\mathrm{argmin}} \sum_{i=1}^{M} \mathcal{L}^{meta}(\theta^{* \; (i)}(\omega), D^{val}_i),
 \end{align*}
+}
 $$
 </p>
 
@@ -186,9 +188,11 @@ where $M$ describes the number of tasks in a batch, $\mathcal{L}^{meta}$ is the 
 
 <p>
 $$
+\bbox[5pt, border: 2px solid red]{
 \begin{align*}
-   s.t. \; \theta^{* \; (i)} = \bbox[5pt, border: 2px solid red]{\underset{\theta}{\mathrm{argmin}} \; \mathcal{L^{task}}(\theta, \omega, D^{tr}_i)},
+   s.t. \; \theta^{* \; (i)} = \underset{\theta}{\mathrm{argmin}} \; \mathcal{L^{task}}(\theta, \omega, D^{tr}_i),
 \end{align*}
+}
 $$
 </p>
 
