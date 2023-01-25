@@ -1,7 +1,7 @@
 ---
 layout: distill
-title: How much meta-learning is in image-to-image translation
-description: [Your blog's abstract - a short description of what your blog is about]
+title: How much meta-learning is in image-to-image translation?
+description: ...in which we discover how meta-learning and transfer learning are fundamentally about distinguishing the general from the domain-specific and how we can discover this by examining the loss functions of image-to-image translation methods.
 date: 2022-12-01
 htmlwidgets: true
 
@@ -39,10 +39,20 @@ toc:
   - name: Conclusion
 ---
 
+<!-- <html>
+    <style type="text/css">
+        .blue_highlight_mx-e {
+            background-color: blue;
+        }
+        .yellow_highlight_mx-e{
+            background-color: yellow;
+        }
+    <\style>
+</html> -->
+
 At the last ICLR conference, Zhou et al. published a paper
 
 - Allan Zhou, Fahim Tajwar, Alexander Robey, Tom Knowles, George J. Pappas, Hamed Hassani, Chelsea Finn [ICLR, 2022] Do Deep Networks Transfer Invariances Across Classes?<d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite>.
-
 
 and tested how well CNN architectures transfer invariance to nuisance transformations between classes of a classification task. 
 
@@ -72,27 +82,22 @@ It is generally more difficult for a neural network to learn to correctly recogn
 
 
 ## Measuring invariance transfer
-
-
-
-
-
 Transformations are alterations to data. In the context of image classification, nuisance transformations are alterations that do not affect the class labels of the data. A model is said to be invariant to a nuisance transformation if it is able to successfully ignore the transformation when predicting a class label.
-
-
 
 
 We can formally define a nuisance transformation
 
+<p>
 $$T(\cdot |x)$$
+</p>
 
 as a distribution over transformation functions. An example of a nuisance transformation might be a distribution over rotation matrices of different angles, or lighting transformations with different exposure values. By definition, nuisance transformations have no impact on class labels $y$, only on data $x$. A perfectly transformation-invariant classifier would completely ignore them, i.e.,
 
+<p>
 $$
     \hat{P}_w(y = j|x) = \hat{P}_w(y = j|x'), \; x' \sim T(\cdot |x).
 $$
-
-
+</p>
 
 {% include figure.html path="assets/img/2022-12-01-how-much-meta-learning-is-in-image-to-image-translation/TRANSFORM_DIST.svg" class="img-fluid" %}
 
@@ -100,9 +105,11 @@ $$
 
 Since this equality does not hold for all classifiers, we need a way to quantify how much worse they perform when presented with transformed data. One way to do this is to compare the two distributions using the Kullback-Leibler divergence. Since measuring the true KL divergence would require an infinite number of test samples, we can calculate its empirical expectation:
 
+<p>
 $$
     eKLD(\hat{P}_w) = \mathbb{E}_{x \sim \mathbb{P}_{train}, x' \sim T(\cdot|x)} [D_{KL}(\hat{P}_w(y = j|x) || \hat{P}_w(y = j|x'))]
 $$
+</p>
 
 The KL divergence is zero if the two distributions are identical and greater than zero otherwise. *The higher the expected KL-divergence, the more the applied transformation impacts the network's predictions.*
 
@@ -148,9 +155,11 @@ We can see from results of Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTR
 
 To see how well MUNIT fits the definition of meta-learning, let's define meta-learning more concretely. Contemporary neural-network-based meta-learners are defined in terms of a learning procedure: An outer training loop with a set of trainable parameters iterates over tasks in a  distribution of tasks. Formally a task is comprised of a dataset and a loss function $ \mathcal{T} = \\\{ \mathcal{D}, \mathcal{L} \\\} $. In an inner loop, a learning algorithm is instantiated for each such task based on the outer loop's parameters. It is trained on a training set (*meta-training*) and tested on a validation set (*meta-validation*). The loss on this validation set is then used to update the outer loop's parameters. In this task-centered view of meta-learning, we can express the objective function as
 
+<p>
 $$
 \underset{\omega}{\mathrm{min}} \; \mathbb{E}_{\mathcal{T} \sim p(\mathcal{T})} \; \mathcal{L}(\mathcal{D}, \omega), 
 $$
+</p>
 
 where $ \omega $ is parameters trained exclusively on the meta-level, i.e., the *meta-knowledge* learnable from the task distribution <d-cite key="DBLP:journals/pami/HospedalesAMS22"></d-cite>.
 
@@ -164,23 +173,24 @@ Both meta-learning and multi-domain unsupervised image-to-image translation are 
 
 Francheschi et al. [2018] <d-cite key="DBLP:conf/icml/FranceschiFSGP18"></d-cite> show that all contemporary neural-network-based meta-learning approaches can be expressed as bi-level optimization problems. We can formally write the optimization objective of a general meta-learner as:
 
-
-<div class="blue_highlight_mx-e">
+<p>
 $$
-\begin{equation}
-   \omega^{*} = \underset{\omega}{\mathrm{argmin}} \sum_{i=1}^{M} \mathcal{L}^{meta}(\theta^{* \; (i)}(\omega), D^{val}_i),
-   \end{equation}
+\begin{align*}
+   \omega^{*} = \bbox[5pt, border: 2px solid blue]{\underset{\omega}{\mathrm{argmin}} \sum_{i=1}^{M} \mathcal{L}^{meta}(\theta^{* \; (i)}(\omega), D^{val}_i)},
+\end{align*}
 $$
-</div>
+</p>
 
 
 where $M$ describes the number of tasks in a batch, $\mathcal{L}^{meta}$ is the meta-loss function, and $ D^{val}_i $ is the meta-validation set of the task $ i $. $\omega$ represents the parameters exclusively updated in the outer loop. $ \theta^{* \; (i)} $ represents an inner loop learning a task that we can formally express as a sub-objective constraining the primary objective
 
-<div class="yellow_highlight_mx-e">
+<p>
 $$
-   s.t. \; \theta^{* \; (i)} = \underset{\theta}{\mathrm{argmin}} \; \mathcal{L^{task}}(\theta, \omega, D^{tr}_i),
+\begin{align*}
+   s.t. \; \theta^{* \; (i)} = \bbox[5pt, border: 2px solid red]{\underset{\theta}{\mathrm{argmin}} \; \mathcal{L^{task}}(\theta, \omega, D^{tr}_i)},
+\end{align*}
 $$
-</div>
+</p>
 
 where $ \theta $ are the model parameters updated in the inner loop, $ \mathcal{L}^{task} $ is the loss function by which they are updated and $ D^{tr}_i $ is the training set of the task $ i $  <d-cite key="DBLP:journals/pami/HospedalesAMS22"></d-cite>.
 
@@ -193,41 +203,66 @@ MUNIT's loss function consists of two adversarial (GAN) <d-cite key="DBLP:conf/n
 
 MUNIT's GAN loss term is
 
+<p>
 $$
-\mathcal{L}^{x_{2}}_{GAN}(\theta_d, \theta_c, \theta_s) = \mathbb{E}_{c_{1} \sim p(c_{1}), s_{2} \sim p(s_{2})} \left[ \log (1 -D_ {2} (G_{2} (c_{1}, s_{2}, \theta_c, \theta_s), \theta_d)) \right] + \mathbb{E}_{x_{2} \sim p(x_{2})}  \left[ \log(D_{2} (x_{2}, \theta_d)) \right],
+\begin{align*}
+    &\mathcal{L}^{x_{2}}_{GAN}(\theta_d, \theta_c, \theta_s) 
+    \\\\
+    =& \;\mathbb{E}_{c_{1} \sim p(c_{1}), s_{2} \sim p(s_{2})} \left[ \log (1 -D_ {2} (G_{2} (c_{1}, s_{2}, \theta_c, \theta_s), \theta_d)) \right]
+    \\
+    +& \;\mathbb{E}_{x_{2} \sim p(x_{2})}  \left[ \log(D_{2} (x_{2}, \theta_d)) \right],
+\end{align*}
 $$
+</p>
 
 where the $ \theta_d $ represents the parameters of the discriminator network, $p(x_2)$ is the data of the second domain, $ c_1 $ is the content embedding of an image from the first domain to be translated. $ s_2 $ is a random style code of the second domain. $ D_2 $ is the discriminator of the second domain, and $ G_2 $ is its generator. MUNIT's full objective function is:
 
+<p>
 $$
-\begin{equation}
-        \underset{\theta_c, \theta_s}{\mathrm{argmin}} \; \underset{\theta_d}{\mathrm{argmax}} \;\mathbb{E}_{c_{1} \sim p(c_{1}), s_{2} \sim p(s_{2})} \left[ \log (1 -D_ {2} (G_{2} (c_{1}, s_{2}, \theta_c, \theta_s), \theta_d)) \right]
-    \\ + \mathbb{E}_{x_{2} \sim p(x_{2})}  \left[ \log(D_{2} (x_{2}, \theta_d)) \right], + \; \mathcal{L}^{x_{1}}_{GAN}(\theta_d, \theta_c, \theta_s) 
-    \\+  \mathcal{L}_{recon}(\theta_c, \theta_s)
-    \end{equation}
+\begin{align*}
+        \underset{\theta_c, \theta_s}{\mathrm{argmin}} \; \underset{\theta_d}{\mathrm{argmax}}& \;\mathbb{E}_{c_{1} \sim p(c_{1}), s_{2} \sim p(s_{2})} \left[ \log (1 -D_ {2} (G_{2} (c_{1}, s_{2}, \theta_c, \theta_s), \theta_d)) \right]
+    \\ +& \; \mathbb{E}_{x_{2} \sim p(x_{2})}  \left[ \log(D_{2} (x_{2}, \theta_d)) \right], + \; \mathcal{L}^{x_{1}}_{GAN}(\theta_d, \theta_c, \theta_s) 
+    \\ +& \;\mathcal{L}_{recon}(\theta_c, \theta_s)
+\end{align*}
 $$
+</p>
 
 (compare <d-cite key="DBLP:conf/eccv/HuangLBK18, DBLP:conf/nips/GoodfellowPMXWOCB14"></d-cite>).
 We can reformulate this into a bi-level optimization problem by extracting a minimization problem describing the update of the generative networks.
 We also drop the second GAN loss term as it is not relevant to our analysis. 
-<div class="blue_highlight_mx-e">
-$$
-    \omega^{*} = \{ \theta_c^*, \theta_s^* \} = \underset{\theta_c, \theta_s}{\mathrm{argmin}} \; \mathbb{E}_{c_{1} \sim p(c_{1}), s_{2} \sim p(s_{2})} \left[ \log (1 -D_ {2} (G_{2} (c_{1}, s_{2}, \theta_c, \theta_s), \theta_d^{*})) \right]
-$$
-</div>
 
+<p>
 $$
-    \\+  \mathcal{L}_{recon}(\theta_c, \theta_s),
+\bbox[5px, border: 2px solid blue]{
+\begin{align*}
+    \omega^{*} 
+    & = \{ \theta_c^*, \theta_s^* \} 
+    \\\\
+    & = 
+    \underset{\theta_c, \theta_s}{\mathrm{argmin}} \; \mathbb{E}_{c_{1} \sim p(c_{1}), s_{2} \sim p(s_{2})} \left[ \log (1 -D_ {2} (G_{2} (c_{1}, s_{2}, \theta_c, \theta_s), \theta_d^{*})) \right]
+    \\
+    & + \mathcal{L}_{recon}(\theta_c, \theta_s),
+\end{align*}
+}
 $$
+</p>
 
 We then add a single constraint, a subsidiary maximization problem for the discriminator function:
 
-<div class="yellow_highlight_mx-e">
+<p>
 $$
-   s.t. \; \theta_d^{*} = \underset{\theta_d}{\mathrm{argmax}} \; \mathbb{E}_{c_{1} \sim p(c_{1}), s_{2} \sim p(s_{2})} \left[ \log (1 -D_ {2} (G_{2} (c_{1}, s_{2}, \theta_c, \theta_s), \theta_d)) \right] 
-    + \mathbb{E}_{x_{2} \sim p(x_{2})}  \left[ \log(D_{2} (x_{2}, \theta_d)) \right]
-    $$
-</div>
+\bbox[5px, border: 2px solid red]{
+\begin{align*}
+   &s.t. \;\theta_d^{*}
+   \\\\
+    & =
+    \underset{\theta_d}{\mathrm{argmax}} \; \mathbb{E}_{c_{1} \sim p(c_{1}), s_{2} \sim p(s_{2})} \left[ \log (1 -D_ {2} (G_{2} (c_{1}, s_{2}, \theta_c, \theta_s), \theta_d)) \right] 
+    \\
+    & + \mathbb{E}_{x_{2} \sim p(x_{2})}  \left[ \log(D_{2} (x_{2}, \theta_d)) \right]
+\end{align*}
+}
+$$
+</p>
 
 
 Interestingly, this bi-level view does not only resemble a meta-learning procedure as expressed above, but the bi-level optimization also facilitates a similar effect. The constraint of maximizing the discriminator's performance punishes style information encoded as content information: Artifacts of the original domain in the translated image that stem from this false decomposition are detected by the discriminator. This is similar to *meta-overfitting*, which meta-learning prevents via its outer optimization loop.
