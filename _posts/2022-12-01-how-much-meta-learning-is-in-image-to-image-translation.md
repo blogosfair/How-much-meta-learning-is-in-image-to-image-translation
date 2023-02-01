@@ -1,7 +1,7 @@
 ---
 layout: distill
 title: How much meta-learning is in image-to-image translation?
-description: ...in which we apply meta-learning literature to a paper studying how well CNNs deal with nuisance transforms in a class-imbalanced setting and find a surprising amount of similarity - from meta-information to loss functions.
+description: ...in which we find a connection between meta-learning literature and a paper studying how well CNNs deal with nuisance transforms in a class-imbalanced setting. Closer inspection reveals a surprising amount of similarity - from meta-information to loss functions.
 date: 2022-12-01
 htmlwidgets: true
 
@@ -31,11 +31,10 @@ bibliography: 2022-12-01-how-much-meta-learning-is-in-image-to-image-translation
 #   - make sure that TOC names match the actual section names
 #     for hyperlinks within the post to work correctly.
 toc:
-  - name: The problem of classification with class-imbalances
-  - name: Measuring invariance transfer
+  - name: A closer look at the experiment
+  - name: How is this a meta-learning experiment? 
   - name: Generative Invariance Transfer
-  - name: What does this have to do with meta-learning? 
-  - name: How much meta-learning is in image-to-image translation?
+  - name: How much meta-learning is in MUNIT?
   - name: Conclusion
 ---
 
@@ -44,28 +43,28 @@ At the last ICLR conference, Zhou et al. presented work showing that CNNs do not
 - Allan Zhou, Fahim Tajwar, Alexander Robey, Tom Knowles, George J. Pappas, Hamed Hassani, Chelsea Finn [ICLR, 2022] Do Deep Networks Transfer Invariances Across Classes?<d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite>.
 
 Here is a quick summary of their findings: 
-If I train a CNN on a set of randomly brightened and darkened images of apples and oranges how to distinguish these fruit, it will learn to ignore the brightness of the scene. We say that the CNN learned that classification is **invariant** to the **nuisance transformation** of randomly changing the brightness of an image. I now add a set of plums to the training data but fewer than I have apples and oranges but using the same random transformations. The training set thus becomes **class-imbalanced**.
+If I train a Convolutional Neural Net (CNN) to classify fruit on a set of randomly brightened and darkened images of apples and oranges, it will learn to ignore the scene's brightness. We say that the CNN learned that classification is **invariant** to the **nuisance transformation** of randomly changing the brightness of an image. I now add a set of plums to the training data, but fewer examples of them than I have apples and oranges. However, I keep using the same random transformations. The training set thus becomes **class-imbalanced**.
 
 We might expect a sophisticated learner to look at the entire dataset, recognize the random brightness modifications across all types of fruit and henceforth ignore brightness when making predictions. If this applied to our fruit experiment, the CNN would be similarly good at ignoring lighting variations on all types of fruit. Furthermore, we would expect the CNN to become more competent at ignoring lighting variations in proportion to **the total amount of images**, irrespective of which fruit they depict. 
 
-Zhou et al. show that this is not the case: When using a CNN on a **class-imbalanced** classification task with random nuisance transforms, the CNNs invariance to the transform is proportional to the size of the training set **for each class**. This finding suggests CNNs don't **transfer invariance** between classes when learning such a classification task.
+Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite>. show that a CNN does not behave like this: When using a CNN on a **class-imbalanced** classification task with random nuisance transformations, the CNNs invariance to the transformation is proportional to the size of the training set **for each class**. This finding suggests CNNs don't **transfer invariance** between classes when learning such a classification task.
 
-However, there is a solution: Zhou et al. use an Image to Image translation architecture called MUNIT <d-cite key="DBLP:conf/eccv/HuangLBK18"></d-cite> to learn the transforms and generate additional data from which the CNN can learn the invariance separately for each class. Thus, the invariance to nuisance transform is transferred **generatively**. They call this method **Generative Invariance Transfer (GIT)**.
+However, there is a solution: Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> use an Image to Image translation architecture called MUNIT<d-cite key="DBLP:conf/eccv/HuangLBK18"></d-cite> to learn the transformations and generate additional data from which the CNN can learn the invariance separately for each class. Thus, the invariance to nuisance transformations is transferred **generatively**. They call this method **Generative Invariance Transfer (GIT)**.
 
 In this blog post I am going to argue that:
-- The experiment described above is a meta-learning setting.
+- The experiment described above is a meta-learning experiment.
 - MUNIT is related to meta-learning methods.
 
-Before we proceed to the main post some definitions. If you are already familiar with the terms you may skip this part:
+Before we proceed to the main post, let's clarify some definitions. If you are already familiar with the subject you may skip this part:
 
 <details>
-  <summary><b> Definition: Class-Imbalanced Classification Task</b></summary>
+  <summary><b> Definition: Class-Imbalanced Classification</b></summary>
   <br/>
   <p>
-    The problem of classification with class imbalances occurs when the frequencies of different class labels differ significantly in a dataset. In many real-world datasets, the number of examples for each class is not equal. Class-imbalanced classification refers to classification on datasets where the frequencies of class labels vary significantly. 
+     In many real-world classification datasets, the number of examples for each class varies. Class-imbalanced classification refers to classification on datasets where the frequencies of class labels vary significantly. 
   </p>
   <p>
-    It is generally more difficult for a neural network to learn to correctly recognize classes with fewer examples. However, it is often important to perform well on all classes, regardless of their frequency in the dataset. For example, in a dataset that classifies different types of skin tumors, the majority of examples may be benign, but it is especially important to accurately identify the rare, malignant ones. Metrics designed to evaluate balanced classification tasks may not be suitable for class-imbalanced data, as they can lead to misleading results.
+    It is generally more difficult for a neural network to learn to classify classes with fewer examples. However, it is often important to perform well on all classes, regardless of their frequency in the dataset. If I train a model to classify a dataset of different skin tumors, most examples may be benign. Still, it is crucial to identify the rare, malignant ones. Experiment design, including training and evaluation methods must therefore be adjusted when using class-imbalanced data.
     </p>
     <br/>
 </details>
@@ -73,14 +72,14 @@ Before we proceed to the main post some definitions. If you are already familiar
   <summary><b> Definition: Nuisance Transformation & Transformation Invariance</b></summary>
   <br/>
   <p>
-    Transformations are alterations to data. In the context of image classification, nuisance transformations are alterations that do not affect the class labels of the data. A model is said to be invariant to a nuisance transformation if it can successfully ignore the transformation when predicting a class label.
+    Transformations are alterations of data. In the context of image classification, nuisance transformations are alterations that do not affect the class labels of the data. A model is said to be invariant to a nuisance transformation if it can successfully ignore the transformation when predicting a class label.
   </p>
     We can formally define a nuisance transformation
   <p>
     $$T(\cdot |x)$$
   </p>
   <p>
-    as a distribution over transformation functions. An example of a nuisance transformation might be a distribution over rotation matrices of different angles, or lighting transformations with different exposure values. By definition, nuisance transformations have no impact on class labels $y$, only on data $x$. A perfectly transformation-invariant classifier would completely ignore them, i.e.,
+    as a distribution over transformation functions. An example of a nuisance transformation might be a distribution over rotation matrices of different angles, or lighting transformations with different exposure values. By definition, nuisance transformations have no impact on class labels $y$, only on data $x$. A perfectly transformation-invariant classifier would thus completely ignore them, i.e.,
   </p>
   <p>
     $$
@@ -92,11 +91,11 @@ Before we proceed to the main post some definitions. If you are already familiar
 
 ## A closer look at the experiment
 
-Let's take a more detailed look at the experiment Zhou et al. conducted:
+Let's take a more detailed look at the experiment Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> conducted:
 
-Zhou et al. take a dataset, e.g., CIFAR-100, then apply a nuisance transformation, for example, random rotation, background intensity, or dilation or erosion. They then remove samples from some classes until the distribution of class sizes follows Zipf's law with parameter 2.0 and a minimum class size of 5. The test set remains balanced, i.e., all test classes have the same number of samples. They then train a CNN model on this imbalanced and transformed training data. 
+Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> take a dataset, e.g., CIFAR-100, then apply a nuisance transformation, for example, random rotation, background intensity, or dilation and erosion. They then remove samples from some classes until the distribution of class sizes follows Zipf's law with parameter 2.0 and a minimum class size of 5. The test set remains balanced, i.e., all test classes have the same number of samples. They then train a CNN model - for example, a ResNet - on this imbalanced and transformed training data. 
 
-To measure the invariance of the trained model to the applied transformation Zhou et al. use the empirical Kullback-Leibler divergence between the untransformed test set and the transformed test set of each class. 
+To measure the invariance of the trained model to the applied transformation Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> use the empirical Kullback-Leibler divergence between the untransformed test set and the transformed test set of each class. 
 
 <p>
 $$
@@ -104,9 +103,9 @@ $$
 $$
 </p>
 
-If the learner is invariant to the transform, the predicted probability distribution over class labels should be identical for the transformed and untransformed images. In that case, the KLD should be zero and greater than zero otherwise.**The higher the expected KL-divergence, the more the applied transformation impacts the network's predictions.**
+If the learner is invariant to the transformation, the predicted probability distribution over class labels should be identical for the transformed and untransformed images. In that case, the KLD should be zero and greater than zero otherwise. The higher the expected KL-divergence, the more the applied transformation impacts the network's predictions.
 
-The result: eKLD falls with class size, meaning the CNN does not learn that there are the same nuisance transformations on all images and therefore does not transfer this knowledge to the classes with less training data. It learns invariance **for each class separately**.
+The result: eKLD falls with class size. This implies that the CNN does not learn that there are the same nuisance transformations on all images and therefore does not transfer this knowledge to the classes with less training data. A CNN learns invariance **separately for each class**.
 
 {% include figure.html path="assets/img/2022-12-01-how-much-meta-learning-is-in-image-to-image-translation/EKLD.svg" class="img-fluid" %}
 
@@ -129,27 +128,29 @@ This transfer is what Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF2
 
 Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> don't stop there. They show that, using the MUNIT (Multimodal Unsupervised image-to-image Translation)<d-cite key="DBLP:conf/eccv/HuangLBK18"></d-cite>  architecture, they can learn the nuisance transformations applied to the dataset and generate additional training samples for the classes with few samples, improving transformation invariance there. They call this Generative invariance transfer (GIT). Let's take a closer look: 
 
-MUNIT networks are capable of performing image-to-image translation, which means that they can translate an image from one domain, such as pictures of leopards, into another domain, such as pictures of house cats. The resulting translated image should look like a real house cat while still resembling the original leopard image. For instance, if the leopard in the original image has its eyes closed, the translated image should contain a house cat with closed eyes. This is because the eye state is a feature present in both domains, and a good translator should not alter it. On the other hand, a leopard's fur is yellow and spotted, while a house cat's fur can be white, black, grey, or brown. Therefore, to make the translated images indistinguishable from real house cats, the translator must produce house cats in all these colors.
+MUNIT networks are capable of performing image-to-image translation, which means that they can translate an image from one domain, such as pictures of leopards, into another domain, such as pictures of house cats. The translated image should look like a real house cat while still resembling the original leopard image. For instance, if the leopard in the original image has its eyes closed, the translated image should contain a house cat with closed eyes. Eye state is a feature present in both domains, so a good translator should not alter it. On the other hand, a leopard's fur is yellow and spotted, while a house cat's fur can be white, black, grey, or brown. To make the translated images indistinguishable from real house cats, the translator must thus replace leopard fur with house cat fur.
 
 {% include figure.html path="assets/img/2022-12-01-how-much-meta-learning-is-in-image-to-image-translation/MUNIT_ENCODING.svg" class="img-fluid" %}
 
 MUNIT networks learn to perform translations by correctly distinguishing the domain-agnostic features (such as eye state) from the domain-specific features (such as the distribution of fur color). They embed an image into two latent spaces: a content space that encodes the domain-agnostic features and a style space that encodes the domain-specific features (see figure above).
 
-To transform a leopard into a house cat, we can encode the leopard into a content and a style code, discard the leopard-specific style code, randomly select a cat-specific style code, and assemble a house cat image that looks similar by combining the leopard's content code with the randomly selected cat style code (see figure below).
+To transform a leopard into a house cat, we can encode the leopard into a content and a style code, discard the leopard-specific style code, randomly select a cat-specific style code, and assemble a house cat image that looks similar by combining the leopard's content code with the randomly chosen cat style code (see figure below).
 
 {% include figure.html path="assets/img/2022-12-01-how-much-meta-learning-is-in-image-to-image-translation/MUNIT_TRANSLATION.svg" class="img-fluid" %}
 
-Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> modify the process of using MUNIT to transfer images between domains. They do not use MUNIT to transfer images between domains but within a single domain. The MUNIT network exchanges the style code of an image with another style code of the same domain. For example, if the domain is house cats, the MUNIT network might be used to translate a grey house cat into a black one. The learning task in this single-domain application of MUNIT is to decompose domain-agnostic content features from domain-specific style features so that the translated images still look like they are from the same domain. For example, fur color is a valid style feature for house cats because every house cat has a fur color. However, if the domain also includes apples, fur color is not a valid style feature because it would be possible to generate an apple with black fur.
+Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> modify the process of using MUNIT to transfer images between domains. They do not use MUNIT to translate images **between** domains but **within** a domain. The MUNIT network exchanges the style code of an image with another style code of the same domain. For example, if the domain is house cats, the MUNIT network might translate a grey house cat into a black one. The learning task in this single-domain application of MUNIT is to decompose example-agnostic content features from example-specific style features so that the translated images still look like house cats. For example, fur color is a valid style feature for translating within the 'house cat' domain because every house cat has a fur color. A translator only switching fur color is hard to detect.
 
-On a dataset with nuisance transformations, it turns out that the nuisance transformations themselves are valid style features: The result of randomly rotating an image cannot be discerned as artificial when images of all classes, house cats and apples, were previously randomly rotated. 
+ However, if the domain included house cats **and apples**, fur color is not a valid style feature. If it was, the translator might translate fur color on an apple and give it black fur, which would look suspiciously out of place. Whatever house cats and apples have in common - maybe their position or size in the frame - would be a valid style feature. We would expect an intra-domain translator on an apples-and-cats dataset to change the position and size of an apple but not to turn it into a cat (not even partially).
 
-Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> find that when they train a MUNIT network on a dataset with nuisance transformations and class imbalances, the MUNIT network decomposes the class and transformation distributions. The style latent space of the MUNIT network approximates the transformation distribution $T(\cdot &#124;x)$. This allows the MUNIT network to generate images with randomly drawn transformations. Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> use this method to add data to classes with few examples. While the CNN is still unable to transfer invariance to $T(\cdot &#124;x)$ between classes, it can now learn it for each class separately using the data generated by MUNIT, which has acquired knowledge of $T(\cdot &#124;x)$ from the entire dataset.
+It turns out that on a dataset with uniformly applied nuisance transformations, the nuisance transformations are valid style features: The result of randomly rotating an apple cannot be discerned as artificial when images of all classes, house cats and apples, were previously randomly rotated. 
 
-So MUNIT can decompose the class-specific information, e.g., whether something is an apple or a house cat, from the meta-information, the applied nuisance transformation. When we add more classes it has more data and can better learn the transform distribution T(\cdot &#124;x)$. Does solving a meta-learning problem make MUNIT a meta-learner? Let's look at the relationship MUNIT has with traditional meta-learners.
+Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> find that when they train a MUNIT network on a dataset with nuisance transformations and class imbalances, the MUNIT network decomposes the class and transformation distributions. The style latent space of the MUNIT network approximates the transformation distribution $T(\cdot &#124;x)$. The content space preserves the remaining features of the image, such as its class. Thus, when translating an image, i.e., exchanging its style code, MUNIT applies a random nuisance transformation while preserving content. Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> use this method to generate data for classes with few examples. While the CNN is still unable to transfer invariance to $T(\cdot &#124;x)$ between classes, it can now learn it for each class separately using the data generated by MUNIT, which has acquired knowledge of $T(\cdot &#124;x)$ from the entire dataset.
+
+So MUNIT can decompose the example-specific information, e.g., whether something is an apple or a house cat, from the meta-information, the applied nuisance transformations. When we add more classes, it has more data and can better learn the transformation distribution T(\cdot &#124;x)$. Does solving a meta-learning problem make MUNIT a meta-learner? Let's look at the relationship MUNIT has with traditional meta-learners.
 
 ## How much meta-learning is in MUNIT?
 
-To see how well MUNIT fits the definition of meta-learning, let's define meta-learning more concretely. Contemporary neural-network-based meta-learners are defined in terms of a learning procedure: An outer training loop with a set of trainable parameters iterates over tasks in a  distribution of tasks. Formally a task is comprised of a dataset and a loss function $ \mathcal{T} = \\\{ \mathcal{D}, \mathcal{L} \\\} $. In an inner loop, a learning algorithm is instantiated for each such task based on the outer loop's parameters. It is trained on a training set (*meta-training*) and tested on a validation set (*meta-validation*). The loss on this validation set is then used to update the outer loop's parameters. In this task-centered view of meta-learning, we can express the objective function as
+To see how well MUNIT fits the definition of meta-learning, let's define meta-learning more concretely. We define contemporary neural-network-based meta-learners in terms of a learning procedure: An outer training loop with a set of trainable parameters iterates over tasks in a  distribution of tasks. Formally a task is comprised of a dataset and a loss function $ \mathcal{T} = \\\{ \mathcal{D}, \mathcal{L} \\\} $. In an inner loop, a learning algorithm based on the outer loop's parameters is instantiated for each task. We train it on a training set (*meta-training*) and test it on a validation set (*meta-validation*). We then use loss on this validation set to update the outer loop's parameters. In this task-centered view of meta-learning, we can express the objective function as
 
 <p>
 $$
@@ -159,11 +160,11 @@ $$
 
 where $ \omega $ is parameters trained exclusively on the meta-level, i.e., the *meta-knowledge* learnable from the task distribution <d-cite key="DBLP:journals/pami/HospedalesAMS22"></d-cite>.
 
-This *meta-knowledge* is what the meta-learner accumulates and transfers across the tasks in Thrun and Pratt's definition above. Collecting meta-knowledge allows the meta-learner to improve its expected task performance with the number of tasks. The meta-knowledge in the experiment of Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> is the invariance to the nuisance transformations as the transformations are identical and need to be ignored in all classes. By creating additional transformed samples, the MUNIT network makes the meta-knowledge learnable for the CNN.
+This *meta-knowledge* is what the meta-learner accumulates and transfers across the tasks in Thrun and Pratt's definition above. Collecting meta-knowledge allows the meta-learner to improve its expected task performance with the number of tasks. The meta-knowledge in the experiment of Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> is the invariance to the nuisance transformations as the transformations are identical and need to be ignored for images of all classes. By creating additional transformed samples, the MUNIT network makes the meta-knowledge learnable for the CNN.
 
 The task-centered view of meta-learning brings us to a related issue: A meta-learner must discern and decompose task-specific knowledge from meta-knowledge. Contemporary meta-learners decompose meta-knowledge through the different objectives of their inner and outer loops and their respective loss terms. They store meta-knowledge in the outer loop's parameter set $ \omega $ but must not learn task-specific information there. Any unlearned meta-features lead to slower adaptation, negatively impacting performance, *meta-underfitting*. On the other hand, any learned task-specific features will not generalize to unseen tasks in the distribution, thus also negatively impacting performance, *meta-overfitting*.
 
-We recall that, similarly, MUNIT <d-cite key="DBLP:conf/eccv/HuangLBK18"></d-cite> decomposes domain-specific style information and domain-agnostic content information. Applied to two domains, leopards and house cats, a MUNIT network will encode the domain-agnostic information, e.g., posture, scale, background, in its content latent space, and the domain-specific information, e.g., how a cat's hair looks, in its style latent space. If the MUNIT network encoded the domain-agnostic information in the style latent space, the resulting image would not appear to be a good translation since the style information is discarded and replaced. A closed-eyed leopard might be turned into a staring cat. If the MUNIT network encoded the domain-specific transformation in the content latent space, the network would have difficulty translating between domains. A house cat might have leopard fur.
+We recall that, similarly, MUNIT <d-cite key="DBLP:conf/eccv/HuangLBK18"></d-cite> decomposes domain-specific style information and domain-agnostic content information. Applied to two domains, leopards and house cats, a MUNIT network will encode the domain-agnostic information, e.g., posture, scale, background, in its content latent space, and the domain-specific information, e.g., how a cat's hair looks, in its style latent space. If the MUNIT network encoded the domain-agnostic information in the style latent space, the resulting image would not appear to be a good translation since the style information is discarded and replaced. It might turn a closed-eyed leopard into a staring cat. If the MUNIT network encoded the domain-specific transformation in the content latent space, the network would have difficulty translating between domains. A house cat might still have its original leopard fur.
 
 Both meta-learning and multi-domain unsupervised image-to-image translation are thus learning problems that require a separation of the general from the specific. This is even visible when comparing their formalizations as optimization problems.
 
@@ -180,7 +181,7 @@ $$
 </p>
 
 
-where $M$ describes the number of tasks in a batch, $\mathcal{L}^{meta}$ is the meta-loss function, and $ D^{val}_i $ is the meta-validation set of the task $ i $. $\omega$ represents the parameters exclusively updated in the outer loop. $ \theta^{* \; (i)} $ represents an inner loop learning a task that we can formally express as a sub-objective constraining the primary objective
+where $M$ describes the number of tasks in a batch, $\mathcal{L}^{meta}$ is the meta-loss function, and $ D^{val}_i $ is the validation set of the task $ i $. $\omega$ represents the parameters exclusively updated in the outer loop. $ \theta^{* \; (i)} $ represents an inner loop learning a task that we can formally express as a sub-objective constraining the primary objective
 
 <p>
 $$
@@ -265,14 +266,16 @@ $$
 </p>
 
 
-Interestingly, this bi-level view does not only resemble a meta-learning procedure as expressed above, but the bi-level optimization also facilitates a similar effect. The constraint of maximizing the discriminator's performance punishes style information encoded as content information: Artifacts of the original domain in the translated image that stem from this false decomposition are detected by the discriminator. This is similar to *meta-overfitting*, which meta-learning prevents via its outer optimization loop.
+Interestingly, this bi-level view does not only resemble a meta-learning procedure as expressed above, but the bi-level optimization also facilitates a similar effect. Maximizing the discriminator's performance in the constraint punishes style information encoded as content information. If style information is encoded as content information, the discriminator detects artifacts of the original domain in the translated image. Similarly, a meta-learner prevents *meta-overfitting* via an outer optimization loop. 
 
-However, the two procedures differ in the way the inner and outer loop parameters affect each other during training. In GAN training, both sets of parameters have a direct mutual influence, i.e., the discriminator function impacts the gradient of the generator function and vice versa. In a meta-learner, the outer loop directly impacts the inner loop. The impact of the inner loop on the outer loop via the meta-validation loss, meanwhile, is indirect. In the case of MAML, the loss is propagated back through the entire learning procedure of the inner loop.
+The two procedures also share "indirect" parameter updates. During GAN training, the discriminator's parameters are updated through the changes in the generator's parameters, which derive from the discriminator's previous parameters, and so forth; The training of the discriminator and generator are separate but dependent processes. Similarly, in a meta-learner, the outer loop impacts the inner loop by determining its initial learner. The results of the inner loop, meanwhile, impact the outer loop via the meta-validation loss. While often overlapping in practice, the inner and outer loop parameter sets could, in principle, be completely disjunct, as they are in GAN training.
 
-Examining its primary purpose as an image-to-image translation architecture, we cannot add domains to a MUNIT architecture. MUNIT was designed as a binary translator. For multi-domain translation, many MUNIT networks need to be trained to translate between pairs of domains. Thus, it is not a meta-learner in an image-to-image translation context. It does however function in a similar way in discerning content from style and uses similar mechanisms to do so. Thus MUNIT is related to meta-learning architectures.
+Concluding, we discern between MUNIT applied to two domains versus a single domain. When applied to two domains MUNIT is a *binary* image-to-image translation architecture, i.e., we cannot add domains. For multi-domain translation, we need to train many MUNIT networks to translate between pairs of domains. Thus, although it uses mechanisms similar to a meta-learner, it is *not* a meta-learner in an image-to-image translation context. 
+
+However, when applied to a single domain MUNIT *does* "learn to learn" (if you agree with the conclusion of the previous chapter) as it combines information from all classes to extract the transformation distribution. While it does not *perform* classification, the class information of an image is encoded in MUNIT's content space. Since MUNIT is trained unsupervised, it is probably closer to a distance metric than an actual class label. We might thus classify single-domain MUNIT as an unsupervised, generative meta-learner. It performs meta-learning in a general sense of "discerning the general from the task-specific" using a related two-loop training approach with two sets of parameters and a similar loss function. Thus MUNIT is related to meta-learning methods.
 
 ## Conclusion
 
-The ICLR paper "Do Deep Networks Transfer Invariances Across Classes?" <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> shows that image-to-image translation methods can be used to learn and apply nuisance transformations, enabling a CNN to become invariant to them via data augmentation. This blog post argued that this is a meta-learning setting. In the view of this author, Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> solve a meta-learning problem using a generative method. A closer examination reveals parallels between both types of architecture. 
+The ICLR paper "Do Deep Networks Transfer Invariances Across Classes?" <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> shows that image-to-image translation methods can be used to learn and apply nuisance transformations, enabling a CNN to become invariant to them via data augmentation. This blog post argued that this is a meta-learning setting. In the view of this author, Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> solve a meta-learning problem using an unsupervised, generative method. A closer examination reveals parallels between both types of architecture. 
 
 *Learning the meta-information of image-to-image translation and meta-learning might enable researchers to design better architectures in both domains.*
