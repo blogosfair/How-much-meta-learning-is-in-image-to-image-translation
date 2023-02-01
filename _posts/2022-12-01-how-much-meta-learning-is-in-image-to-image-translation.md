@@ -38,20 +38,20 @@ toc:
   - name: Conclusion
 ---
 
-At the last ICLR conference, Zhou et al. presented work showing that CNNs do not transfer information between classes of a classification task. 
+At the last ICLR conference, Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> presented work showing that CNNs do not transfer information between classes of a classification task. 
 
 - Allan Zhou, Fahim Tajwar, Alexander Robey, Tom Knowles, George J. Pappas, Hamed Hassani, Chelsea Finn [ICLR, 2022] Do Deep Networks Transfer Invariances Across Classes?<d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite>.
 
 Here is a quick summary of their findings: 
-If I train a Convolutional Neural Net (CNN) to classify fruit on a set of randomly brightened and darkened images of apples and oranges, it will learn to ignore the scene's brightness. We say that the CNN learned that classification is **invariant** to the **nuisance transformation** of randomly changing the brightness of an image. I now add a set of plums to the training data, but fewer examples of them than I have apples and oranges. However, I keep using the same random transformations. The training set thus becomes **class-imbalanced**.
+If we train a Convolutional Neural Net (CNN) to classify fruit on a set of randomly brightened and darkened images of apples and oranges, it will learn to ignore the scene's brightness. We say that the CNN learned that classification is **invariant** to the **nuisance transformation** of randomly changing the brightness of an image. We now add a set of plums to the training data, but fewer examples of them than we have apples and oranges. However, we keep using the same random transformations. The training set thus becomes **class-imbalanced**.
 
 We might expect a sophisticated learner to look at the entire dataset, recognize the random brightness modifications across all types of fruit and henceforth ignore brightness when making predictions. If this applied to our fruit experiment, the CNN would be similarly good at ignoring lighting variations on all types of fruit. Furthermore, we would expect the CNN to become more competent at ignoring lighting variations in proportion to **the total amount of images**, irrespective of which fruit they depict. 
 
-Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite>. show that a CNN does not behave like this: When using a CNN on a **class-imbalanced** classification task with random nuisance transformations, the CNNs invariance to the transformation is proportional to the size of the training set **for each class**. This finding suggests CNNs don't **transfer invariance** between classes when learning such a classification task.
+Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> show that a CNN does not behave like this: When using a CNN on a **class-imbalanced** classification task with random nuisance transformations, the CNNs invariance to the transformation is proportional to the size of the training set **for each class**. This finding suggests CNNs don't **transfer invariance** between classes when learning such a classification task.
 
 However, there is a solution: Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> use an Image to Image translation architecture called MUNIT<d-cite key="DBLP:conf/eccv/HuangLBK18"></d-cite> to learn the transformations and generate additional data from which the CNN can learn the invariance separately for each class. Thus, the invariance to nuisance transformations is transferred **generatively**. They call this method **Generative Invariance Transfer (GIT)**.
 
-In this blog post I am going to argue that:
+In this blog post we am going to argue that:
 - The experiment described above is a meta-learning experiment.
 - MUNIT is related to meta-learning methods.
 
@@ -64,7 +64,7 @@ Before we proceed to the main post, let's clarify some definitions. If you are a
      In many real-world classification datasets, the number of examples for each class varies. Class-imbalanced classification refers to classification on datasets where the frequencies of class labels vary significantly. 
   </p>
   <p>
-    It is generally more difficult for a neural network to learn to classify classes with fewer examples. However, it is often important to perform well on all classes, regardless of their frequency in the dataset. If I train a model to classify a dataset of different skin tumors, most examples may be benign. Still, it is crucial to identify the rare, malignant ones. Experiment design, including training and evaluation methods must therefore be adjusted when using class-imbalanced data.
+    It is generally more difficult for a neural network to learn to classify classes with fewer examples. However, it is often important to perform well on all classes, regardless of their frequency in the dataset. If we train a model to classify a dataset of different skin tumors, most examples may be benign. Still, it is crucial to identify the rare, malignant ones. Experiment design, including training and evaluation methods must therefore be adjusted when using class-imbalanced data.
     </p>
     <br/>
 </details>
