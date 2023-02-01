@@ -1,6 +1,6 @@
 ---
 layout: distill
-title: How much meta-learning is in image-to-image translation? v2
+title: How much meta-learning is in image-to-image translation?
 description: ...in which we apply meta-learning literature to a paper studying how well CNNs deal with nuisance transforms in a class-imbalanced setting and find a surprising amount of similarity - from meta-information to loss functions.
 date: 2022-12-01
 htmlwidgets: true
