@@ -40,7 +40,7 @@ toc:
 
 At the last ICLR conference, Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> presented work showing that CNNs do not transfer information between classes of a classification task. 
 
-- Allan Zhou, Fahim Tajwar, Alexander Robey, Tom Knowles, George J. Pappas, Hamed Hassani, Chelsea Finn [ICLR, 2022] Do Deep Networks Transfer Invariances Across Classes?<d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite>.
+- Allan Zhou, Fahim Tajwar, Alexander Robey, Tom Knowles, George J. Pappas, Hamed Hassani, Chelsea Finn [ICLR, 2022] Do Deep Networks Transfer Invariances Across Classes?<d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite>
 
 Here is a quick summary of their findings: 
 If we train a Convolutional Neural Net (CNN) to classify fruit on a set of randomly brightened and darkened images of apples and oranges, it will learn to ignore the scene's brightness. We say that the CNN learned that classification is **invariant** to the **nuisance transformation** of randomly changing the brightness of an image. We now add a set of plums to the training data, but fewer examples of them than we have apples and oranges. However, we keep using the same random transformations. The training set thus becomes **class-imbalanced**.
@@ -51,11 +51,11 @@ Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> show that
 
 However, there is a solution: Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> use an Image to Image translation architecture called MUNIT<d-cite key="DBLP:conf/eccv/HuangLBK18"></d-cite> to learn the transformations and generate additional data from which the CNN can learn the invariance separately for each class. Thus, the invariance to nuisance transformations is transferred **generatively**. They call this method **Generative Invariance Transfer (GIT)**.
 
-In this blog post we am going to argue that:
+In this blog post, we are going to argue that:
 - The experiment described above is a meta-learning experiment.
 - MUNIT is related to meta-learning methods.
 
-Before we proceed to the main post, let's clarify some definitions. If you are already familiar with the subject you may skip this part:
+Before we proceed to the main post, let's clarify some definitions. If you are already familiar with the subject, you may skip this part:
 
 <details>
   <summary><b> Definition: Class-Imbalanced Classification</b></summary>
@@ -120,7 +120,7 @@ Let's look at one of the original papers on meta-learning. In the 1998 book "Lea
 
 Now how does this apply to the experiment just outlined? In the introduction, we thought about how a sophisticated learner might handle a dataset like the one described in the last section. We said that a sophisticated learner would learn that the nuisance transformations are applied uniformly **to all classes**. Therefore, if we added more classes to the dataset, the learner would become **more invariant** to the transformations because we expose it to more examples of them. Since this is part of the classification task **for each class**, the learner should, everything else being equal, become better at classification, especially on classes with few training examples. To see this, we must think of the multi-classification task not as a single task but as multiple mappings from image features to activations that must be learned, as a set of binary classification tasks. Thrun and Pratt continue:
 
->For an algorithm to fit this definition some kind of *transfer* must occur between multiple tasks that must have a positive impact on expected task-performance <d-cite key="DBLP:books/sp/98/ThrunP98"></d-cite>.
+>For an algorithm to fit this definition, some kind of *transfer* must occur between multiple tasks that must have a positive impact on expected task-performance <d-cite key="DBLP:books/sp/98/ThrunP98"></d-cite>.
 
 This transfer is what Zhou et al. [2022] <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> tried to measure. There is some meta-information learnable across several tasks, in our case, the transformation distribution across many binary classification tasks. If a learner can learn this meta-information and transfer it to each new task it has "learned to learn"; it is a meta-learner. The goal of Zhou et al.'s <d-cite key="DBLP:conf/iclr/ZhouTRKPHF22"></d-cite> experiment was to see whether this transfer takes place. Thus, arguably, it is a meta-learning experiment.
 
