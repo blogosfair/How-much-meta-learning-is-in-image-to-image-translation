@@ -1,7 +1,4 @@
----
-permalink: /robots.txt
----
 User-agent: *
 Disallow:
 
-Sitemap: {{ site.baseurl | prepend: site.url }}/sitemap.xml
+Sitemap: https://blogosfair.github.io/How-much-meta-learning-is-in-image-to-image-translation//sitemap.xml
